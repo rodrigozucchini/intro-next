@@ -1,29 +1,34 @@
-import { Pokemon } from '../../pokemons';
+import { Pokemon, PokemonsResponse } from '..';
 import { Metadata } from "next";
 import Image from 'next/image';
 import { notFound } from "next/navigation";
 import { cache } from 'react';
 
 interface Props {
-  params: Promise<{ id: string }>; 
+  params: Promise<{ name: string }>; 
 }
 
 export async function generateStaticParams() {
 
-  const static151Pokemons = Array.from({length: 151}).map((v, i) => `${i + 1}`);
+    const data: PokemonsResponse = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${151}`)
+        .then(res => res.json());
 
-  return static151Pokemons.map( id => ({
-    id: id,
-  }));
+    const static151Pokemons = data.results.map(pokemon => ({
+      name: pokemon.name
+    }))
+
+    return static151Pokemons.map( id => ({
+      name: name,
+    }));
 }
 
 // ✅ Metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   try {
-    const { id } = await params; 
+    const { name } = await params; 
 
-    const pokemon = await getPokemon(id);
+    const pokemon = await getPokemon(name);
 
     return {
       title: `#${ pokemon.id } - ${ pokemon.name }`,
@@ -40,9 +45,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 
 // ✅ Fetch optimizado + cache compartido
-const getPokemon = cache(async (id: string): Promise<Pokemon> => {
+const getPokemon = cache(async (name: string): Promise<Pokemon> => {
 
-  const resp = await fetch(`https://pokeapi.co/api/v2/pokemon/${ id }`, {
+  const resp = await fetch(`https://pokeapi.co/api/v2/pokemon/${ name }`, {
     cache: 'force-cache'
   });
 
@@ -60,8 +65,8 @@ const getPokemon = cache(async (id: string): Promise<Pokemon> => {
 // ✅ Página
 export default async function PokemonPage({ params }: Props) {
 
-  const { id } = await params; // 👈 FIX
-  const pokemon = await getPokemon(id);
+  const { name } = await params; // 👈 FIX
+  const pokemon = await getPokemon(name);
 
   return (
     <div className="flex mt-5 flex-col items-center text-slate-800">
