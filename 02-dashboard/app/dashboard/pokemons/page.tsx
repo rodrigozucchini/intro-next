@@ -1,6 +1,7 @@
 import { PokemonsResponse } from "./interfaces/pokemons-response";
 import { SimplePokemon } from "./interfaces/simple-pokemons";
 import { PokemonGrid } from "./interfaces/components/PokemonGrid";
+import { cacheTag, revalidateTag } from "next/cache";
 
 const getPokemons = async( limit= 20, offset= 0 ):Promise<SimplePokemon[]> => {
     const data: PokemonsResponse = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`)
@@ -15,6 +16,10 @@ const getPokemons = async( limit= 20, offset= 0 ):Promise<SimplePokemon[]> => {
 }
 
 export default async function PokemonsPage() {
+  'use cache';
+
+  cacheTag('pokemons');
+  revalidateTag('pokemons', 'max');
 
   const pokemons = await getPokemons(151);
 
